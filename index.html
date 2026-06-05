@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <style>
-:root{--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#242424;--bg4:#2E2E2E;--accent:#C8F05A;--accent2:#A8D040;--text:#F0F0F0;--text2:#A0A0A0;--text3:#606060;--green:#4ADE80;--red:#F87171;--amber:#FBBF24;--blue:#60A5FA;--r:14px;--rs:8px;--f:'DM Sans',sans-serif}
+:root{--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#242424;--bg4:#2E2E2E;--accent:#C8F05A;--accent2:#A8D040;--text:#F0F0F0;--text2:#A0A0A0;--text3:#606060;--green:#4ADE80;--red:#F87171;--amber:#FBBF24;--r:14px;--rs:8px;--f:'DM Sans',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--f);background:var(--bg);color:var(--text);min-height:100vh}
 input,select,button{font-family:var(--f);font-size:15px;color:var(--text)}
@@ -23,6 +23,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .header h1{font-size:22px;font-weight:600;letter-spacing:-0.5px}
 .header h1 span{color:var(--accent)}
 .hdate{font-size:12px;color:var(--text3);margin-top:3px}
+.sync-bar{display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:12px;color:var(--text3)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3)}
+.sync-dot.ok{background:var(--green)}
+.sync-dot.err{background:var(--red)}
+.sync-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg2);border-top:1px solid var(--bg3);display:flex;z-index:100;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;color:var(--text3)}
 .ni.on{color:var(--accent)}
@@ -72,10 +78,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .oa.e{color:#4ADE80}.oa.s{color:#F87171}.oa.t{color:#FBBF24}
 .om{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .chip{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500}
-.cpro{background:#14532d;color:#bbf7d0}
-.cper{background:#1e1b4b;color:#c7d2fe}
-.clom{background:#2e1065;color:#e9d5ff}
-.ccot{background:#431407;color:#fed7aa}
+.cpro{background:#14532d;color:#bbf7d0}.cper{background:#1e1b4b;color:#c7d2fe}
+.clom{background:#2e1065;color:#e9d5ff}.ccot{background:#431407;color:#fed7aa}
 .odt{font-size:11px;color:var(--text3)}
 .psec{margin-bottom:22px}
 .ptitle{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
@@ -90,9 +94,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ir input{width:140px;text-align:right}
 .sbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--accent);border-radius:var(--rs);color:var(--accent);font-size:14px;font-weight:500;cursor:pointer;margin-top:6px}
 .exbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--rs);color:var(--text2);font-size:14px;cursor:pointer;margin-top:10px}
+.synbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--amber);border-radius:var(--rs);color:var(--amber);font-size:14px;cursor:pointer;margin-top:8px}
 .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0F0F0F;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
+.toast.err{background:var(--red);color:#fff}
 </style>
 </head>
 <body>
@@ -100,6 +106,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="header">
     <h1>mon <span>budget</span></h1>
     <div class="hdate" id="hd"></div>
+  </div>
+  <div class="sync-bar">
+    <div class="sync-dot" id="sdot"></div>
+    <span id="slbl">Non synchronisé</span>
+    <button onclick="syncAll()" style="margin-left:auto;padding:4px 10px;background:var(--bg3);border:1px solid var(--bg4);border-radius:20px;color:var(--text2);font-size:11px;cursor:pointer"><i class="ti ti-refresh"></i> Sync</button>
   </div>
 
   <div id="s-soldes" class="sec on">
@@ -126,13 +137,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="fg"><label>Moyen</label><select id="fmo"><option>Espèces</option><option>Virement</option><option>Chèque</option><option>Mobile Money</option></select></div>
     <div class="fg" id="fgp"><label>Payeur / Source</label><input type="text" id="fpay" placeholder="Nom..."/></div>
     <div class="fg"><label>Description</label><input type="text" id="fdesc" placeholder="Ex: Plein avant Cotonou..."/></div>
-    <button class="abtn" onclick="saveOp()">Enregistrer</button>
+    <button class="abtn" onclick="saveOp()"><i class="ti ti-check"></i> Enregistrer</button>
   </div>
 
   <div id="s-recap" class="sec">
     <div class="mrow" id="mr"></div>
     <div id="rb"></div>
-    <button class="exbtn" onclick="exportCSV()"><i class="ti ti-download"></i> Exporter CSV → Google Sheets</button>
+    <button class="synbtn" onclick="syncMois(cmR)"><i class="ti ti-refresh"></i> Synchroniser depuis Sheets</button>
+    <button class="exbtn" onclick="exportCSV()"><i class="ti ti-download"></i> Exporter CSV</button>
   </div>
 
   <div id="s-hist" class="sec">
@@ -148,7 +160,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="arow"><input type="text" id="np" placeholder="Nouvelle poche..."/><button class="abtn2" onclick="addP()">+ Ajouter</button></div>
     </div>
     <div class="psec"><div class="ptitle">Soldes initiaux</div><div id="pi"></div>
-      <button class="sbtn" onclick="saveI()">Enregistrer les soldes</button>
+      <button class="sbtn" onclick="saveI()"><i class="ti ti-check"></i> Enregistrer les soldes</button>
+    </div>
+    <div class="psec">
+      <div class="ptitle">Synchronisation Google Sheets</div>
+      <button class="synbtn" onclick="syncAll()"><i class="ti ti-refresh"></i> Tout synchroniser</button>
     </div>
   </div>
 </div>
@@ -163,6 +179,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div class="toast" id="toast"></div>
 
 <script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1IJ9jB7Hb4VMJ80h3QuPW2AL20mm2VulYSf4VLRSwASPDmX6p0I61drY-2L2KhvL5/exec';
+const SECRET = 'doury2026budget';
 const MOIS=["Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const BUDGETS={"Essence":40000,"Courses Lomé":100000};
 const DC=["Loyer","Essence","Crédit","Péages","Courses Cotonou","Courses Lomé","Salaire Boris","Salaire Brice","Internet","ChatGPT","Netflix","Électricité","Habits","Restaurant","Mission client","Mum","Prière","Don","Manicure","Pressing","Prestataire Lomé","Fourniture de bureau","Coiffeuse","Chauffeur","Autre"];
@@ -203,7 +221,8 @@ const DO=[
 ];
 
 const fmt=n=>Math.round(n).toLocaleString('fr-FR')+' FCFA';
-const toast=msg=>{const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000)};
+const toast=(msg,err=false)=>{const t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(err?' err':'');setTimeout(()=>t.className='toast',2500)};
+const setSyncStatus=(s,msg)=>{const d=document.getElementById('sdot'),l=document.getElementById('slbl');d.className='sync-dot '+s;l.textContent=msg};
 
 let cats=JSON.parse(localStorage.getItem('b26_c')||JSON.stringify(DC));
 let poches=JSON.parse(localStorage.getItem('b26_p')||JSON.stringify(DP));
@@ -214,6 +233,66 @@ let ct='Entrée',cmR='Juin',cmH='Juin';
 
 const sv=()=>{localStorage.setItem('b26_c',JSON.stringify(cats));localStorage.setItem('b26_p',JSON.stringify(poches));localStorage.setItem('b26_o',JSON.stringify(ops))};
 
+// ── SYNC GOOGLE SHEETS ────────────────────────────────────
+async function pushToSheets(op) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        secret: SECRET,
+        mois: op.mois,
+        date: op.date,
+        ville: op.v,
+        type: op.type,
+        pp: op.pp,
+        categorie: op.c,
+        poche: op.p,
+        pocheDest: op.pd||'',
+        moyen: op.mo,
+        montant: op.m,
+        payeur: op.pay||'',
+        description: op.d||''
+      })
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch(e) { return false; }
+}
+
+async function syncMois(mois) {
+  setSyncStatus('loading', 'Synchronisation...');
+  try {
+    const res = await fetch(`${SCRIPT_URL}?secret=${SECRET}&mois=${encodeURIComponent(mois)}`);
+    const data = await res.json();
+    if(data.error){ setSyncStatus('err','Erreur sync');toast('Erreur : '+data.error,true);return; }
+    const sheetsOps = data.ops.map((o,i)=>({
+      id: 'sh_'+mois+'_'+i,
+      date: o.date, mois,
+      type: o.type, m: Number(o.montant)||0,
+      p: o.poche, pd: o.pocheDest||'',
+      c: o.categorie, v: o.ville||'Lomé',
+      pp: o.pp||'PERSO', mo: o.moyen||'Espèces',
+      pay: o.payeur||'', d: o.description||''
+    })).filter(o=>o.m>0);
+    ops = ops.filter(o=>o.mois !== mois);
+    ops = [...sheetsOps, ...ops];
+    sv();
+    setSyncStatus('ok','Synchronisé');
+    toast('Sync '+mois+' OK !');
+    if(cmR===mois) rRecap();
+    if(cmH===mois) rHist();
+    rSoldes();
+  } catch(e) { setSyncStatus('err','Hors ligne');toast('Erreur réseau',true); }
+}
+
+async function syncAll() {
+  setSyncStatus('loading','Synchronisation...');
+  for(const m of MOIS) { await syncMois(m); }
+  setSyncStatus('ok','Tout synchronisé');
+  toast('Synchronisation complète !');
+}
+
+// ── FORMULAIRE ────────────────────────────────────────────
 function rSel(){
   ['fp','fd'].forEach(id=>{const e=document.getElementById(id),v=e.value;e.innerHTML=poches.map(p=>`<option>${p}</option>`).join('');if(v)e.value=v});
   const c=document.getElementById('fc'),v=c.value;c.innerHTML=cats.map(x=>`<option>${x}</option>`).join('');if(v)c.value=v;
@@ -229,13 +308,13 @@ function st(t){
   document.getElementById('fgp').style.display=t==='Entrée'?'block':'none';
 }
 
-function saveOp(){
+async function saveOp(){
   const m=parseFloat(document.getElementById('fm').value);
-  if(!m||m<=0){toast('Montant invalide !');return;}
+  if(!m||m<=0){toast('Montant invalide !',true);return;}
   const now=new Date();
   const mi=now.getMonth()-5;
   const mn=mi>=0&&mi<7?MOIS[mi]:MOIS[0];
-  ops.unshift({id:Date.now(),date:now.toLocaleDateString('fr-FR'),mois:mn,type:ct,m,
+  const op={id:Date.now(),date:now.toLocaleDateString('fr-FR'),mois:mn,type:ct,m,
     p:document.getElementById('fp').value,
     pd:ct==='Transfert'?document.getElementById('fd').value:'',
     c:ct==='Transfert'?'Transfert':document.getElementById('fc').value,
@@ -244,15 +323,20 @@ function saveOp(){
     mo:document.getElementById('fmo').value,
     pay:document.getElementById('fpay').value,
     d:document.getElementById('fdesc').value,
-  });
+  };
+  ops.unshift(op);
   sv();
   document.getElementById('fm').value='';
   document.getElementById('fdesc').value='';
   document.getElementById('fpay').value='';
   toast('Enregistré !');
+  setSyncStatus('loading','Envoi vers Sheets...');
+  const ok = await pushToSheets(op);
+  setSyncStatus(ok?'ok':'err', ok?'Synchronisé':'Hors ligne - sauvegardé en local');
   go('soldes',document.getElementById('n-soldes'));
 }
 
+// ── SOLDES ────────────────────────────────────────────────
 function getSolde(p){
   let e=init[p]||0;
   ops.forEach(o=>{
@@ -275,6 +359,7 @@ function rSoldes(){
   tEl.className='big '+(tot<0?'neg':tot>0?'pos':'');
 }
 
+// ── RECAP ─────────────────────────────────────────────────
 function mkM(id,cur,cb){
   document.getElementById(id).innerHTML=MOIS.map(m=>`<div class="mp${m===cur?' on':''}" onclick="${cb}('${m}')">${m.substring(0,3)}</div>`).join('');
 }
@@ -303,6 +388,7 @@ function rRecap(){
 }
 function swR(m){cmR=m;rRecap();}
 
+// ── HISTORIQUE ────────────────────────────────────────────
 function rHist(){
   mkM('mh',cmH,'swH');
   const f=ops.filter(o=>o.mois===cmH);
@@ -318,6 +404,7 @@ function rHist(){
 }
 function swH(m){cmH=m;rHist();}
 
+// ── PARAMS ────────────────────────────────────────────────
 function rParams(){
   document.getElementById('pc').innerHTML=cats.map((c,i)=>`<div class="tag">${c}<span class="tx" onclick="rmC(${i})">×</span></div>`).join('');
   document.getElementById('pp2').innerHTML=poches.map((p,i)=>`<div class="tag">${p}<span class="tx" onclick="rmP(${i})">×</span></div>`).join('');
