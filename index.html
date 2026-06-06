@@ -263,14 +263,14 @@ async function syncMois(mois){
     const data=await res.json();
     if(data.error||!data.ops) return false;
     const sheetsOps=data.ops.map((o,i)=>({
-      id: parseInt(o.date.split('/').reverse().join('')+''+i) || Date.now()+i,
+      id: Date.now()+i,
       date:o.date, mois,
       type:o.type||'Sortie',
-      m:Number(o.montant)||0,
-      p:o.poche||'', pd:o.pocheDest||'',
-      c:o.categorie||'', v:o.ville||'Lomé',
-      pp:o.pp||'PERSO', mo:o.moyen||'Espèces',
-      pay:o.payeur||'', d:o.description||'',
+      m:Number(o.m)||0,
+      p:o.p||'', pd:o.pd||'',
+      c:o.c||'', v:o.v||'Lomé',
+      pp:o.pp||'PERSO', mo:o.mo||'Espèces',
+      pay:o.pay||'', d:o.d||'',
       src:'sheets'
     })).filter(o=>o.m>0 && o.type && o.p);
     mergeOps(sheetsOps);
