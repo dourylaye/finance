@@ -24,11 +24,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .header h1 span{color:var(--accent)}
 .hdate{font-size:12px;color:var(--text3);margin-top:3px}
 .sync-bar{display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:12px;color:var(--text3)}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3)}
-.sync-dot.ok{background:var(--green)}
-.sync-dot.err{background:var(--red)}
-.sync-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sdot.ok{background:var(--green)}
+.sdot.err{background:var(--red)}
+.sdot.spin{background:var(--amber);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-btn{margin-left:auto;padding:4px 10px;background:var(--bg3);border:1px solid var(--bg4);border-radius:20px;color:var(--text2);font-size:11px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg2);border-top:1px solid var(--bg3);display:flex;z-index:100;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;color:var(--text3)}
 .ni.on{color:var(--accent)}
@@ -43,6 +44,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sc{background:var(--bg2);border-radius:var(--rs);padding:14px}
 .sc .sl{font-size:11px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sc .sa{font-size:15px;font-weight:500}
+.sc .si{font-size:10px;color:var(--text3);margin-top:3px}
 .pos{color:#4ADE80}.neg{color:#F87171}
 .type-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
 .tb{padding:12px 6px;border:1px solid var(--bg4);border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;text-align:center;background:var(--bg2);color:var(--text2)}
@@ -93,8 +95,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ir label{font-size:13px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ir input{width:140px;text-align:right}
 .sbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--accent);border-radius:var(--rs);color:var(--accent);font-size:14px;font-weight:500;cursor:pointer;margin-top:6px}
-.exbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--rs);color:var(--text2);font-size:14px;cursor:pointer;margin-top:10px}
 .synbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--amber);border-radius:var(--rs);color:var(--amber);font-size:14px;cursor:pointer;margin-top:8px}
+.exbtn{width:100%;padding:13px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--rs);color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px}
 .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0F0F0F;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
@@ -108,9 +110,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="hdate" id="hd"></div>
   </div>
   <div class="sync-bar">
-    <div class="sync-dot" id="sdot"></div>
-    <span id="slbl">Non synchronisé</span>
-    <button onclick="syncAll()" style="margin-left:auto;padding:4px 10px;background:var(--bg3);border:1px solid var(--bg4);border-radius:20px;color:var(--text2);font-size:11px;cursor:pointer"><i class="ti ti-refresh"></i> Sync</button>
+    <div class="sdot" id="sdot"></div>
+    <span id="slbl">Appuie sur Sync</span>
+    <button class="sync-btn" onclick="syncAll()"><i class="ti ti-refresh"></i> Sync</button>
   </div>
 
   <div id="s-soldes" class="sec on">
@@ -143,7 +145,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div id="s-recap" class="sec">
     <div class="mrow" id="mr"></div>
     <div id="rb"></div>
-    <button class="synbtn" onclick="syncMois(cmR)"><i class="ti ti-refresh"></i> Synchroniser depuis Sheets</button>
+    <button class="synbtn" onclick="syncAll()"><i class="ti ti-refresh"></i> Synchroniser depuis Sheets</button>
     <button class="exbtn" onclick="exportCSV()"><i class="ti ti-download"></i> Exporter CSV</button>
   </div>
 
@@ -159,12 +161,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="psec"><div class="ptitle">Poches</div><div class="tags" id="pp2"></div>
       <div class="arow"><input type="text" id="np" placeholder="Nouvelle poche..."/><button class="abtn2" onclick="addP()">+ Ajouter</button></div>
     </div>
-    <div class="psec"><div class="ptitle">Soldes initiaux</div><div id="pi"></div>
-      <button class="sbtn" onclick="saveI()"><i class="ti ti-check"></i> Enregistrer les soldes</button>
+    <div class="psec">
+      <div class="ptitle">Soldes initiaux (avant Juin 2026)</div>
+      <div id="pi"></div>
+      <button class="sbtn" onclick="saveI()"><i class="ti ti-check"></i> Enregistrer</button>
     </div>
     <div class="psec">
-      <div class="ptitle">Synchronisation Google Sheets</div>
-      <button class="synbtn" onclick="syncAll()"><i class="ti ti-refresh"></i> Tout synchroniser</button>
+      <div class="ptitle">Synchronisation</div>
+      <button class="synbtn" onclick="syncAll()"><i class="ti ti-refresh"></i> Tout synchroniser depuis Sheets</button>
     </div>
   </div>
 </div>
@@ -179,117 +183,113 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div class="toast" id="toast"></div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1IJ9jB7Hb4VMJ80h3QuPW2AL20mm2VulYSf4VLRSwASPDmX6p0I61drY-2L2KhvL5/exec';
-const SECRET = 'doury2026budget';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbx1IJ9jB7Hb4VMJ80h3QuPW2AL20mm2VulYSf4VLRSwASPDmX6p0I61drY-2L2KhvL5/exec';
+const SECRET='doury2026budget';
 const MOIS=["Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const BUDGETS={"Essence":40000,"Courses Lomé":100000};
 const DC=["Loyer","Essence","Crédit","Péages","Courses Cotonou","Courses Lomé","Salaire Boris","Salaire Brice","Internet","ChatGPT","Netflix","Électricité","Habits","Restaurant","Mission client","Mum","Prière","Don","Manicure","Pressing","Prestataire Lomé","Fourniture de bureau","Coiffeuse","Chauffeur","Autre"];
 const DP=["Caisse","Flooz Lomé","Yas Lomé","Momo Bénin","Compte Perso","Ibda Lomé","Ibda Bénin","Carte Visa"];
+
+// Soldes AVANT toute opération (situation au 01/06/2026)
 const DI={"Caisse":10000,"Flooz Lomé":10168,"Yas Lomé":26234,"Momo Bénin":4152,"Compte Perso":9144,"Ibda Lomé":1257996,"Ibda Bénin":1000000,"Carte Visa":900};
-const DO=[
-  {id:1,date:"02/06/2026",mois:"Juin",type:"Sortie",m:200000,p:"Ibda Lomé",pd:"",c:"Salaire Boris",v:"Lomé",pp:"PRO",mo:"Chèque",pay:"",d:"Salaire Mai"},
-  {id:2,date:"02/06/2026",mois:"Juin",type:"Sortie",m:147500,p:"Ibda Lomé",pd:"",c:"Prestataire Lomé",v:"Lomé",pp:"PRO",mo:"Chèque",pay:"",d:"Jacques : production 2 spots"},
-  {id:3,date:"03/06/2026",mois:"Juin",type:"Transfert",m:100000,p:"Ibda Lomé",pd:"Caisse",c:"Transfert",v:"Lomé",pp:"PRO",mo:"Chèque",pay:"",d:"Moi même"},
-  {id:4,date:"03/06/2026",mois:"Juin",type:"Sortie",m:280000,p:"Ibda Lomé",pd:"",c:"Prestataire Lomé",v:"Lomé",pp:"PRO",mo:"Chèque",pay:"",d:"Paiement Perfect Print"},
-  {id:5,date:"03/06/2026",mois:"Juin",type:"Sortie",m:25000,p:"Caisse",pd:"",c:"Manicure",v:"Lomé",pp:"PERSO",mo:"Espèces",pay:"",d:""},
-  {id:6,date:"03/06/2026",mois:"Juin",type:"Sortie",m:20000,p:"Caisse",pd:"",c:"Pressing",v:"Lomé",pp:"PERSO",mo:"Espèces",pay:"",d:""},
-  {id:7,date:"03/06/2026",mois:"Juin",type:"Sortie",m:600,p:"Caisse",pd:"",c:"Courses Lomé",v:"Lomé",pp:"PERSO",mo:"Espèces",pay:"",d:"Achat porte clés"},
-  {id:8,date:"03/06/2026",mois:"Juin",type:"Sortie",m:44500,p:"Caisse",pd:"",c:"Fourniture de bureau",v:"Lomé",pp:"PRO",mo:"Espèces",pay:"",d:"Caisse de rangement, nappe, rideau"},
-  {id:9,date:"03/06/2026",mois:"Juin",type:"Sortie",m:4000,p:"Caisse",pd:"",c:"Fourniture de bureau",v:"Lomé",pp:"PERSO",mo:"Espèces",pay:"",d:"Achat Stylo Tata Séna"},
-  {id:10,date:"03/06/2026",mois:"Juin",type:"Sortie",m:3000,p:"Caisse",pd:"",c:"Fourniture de bureau",v:"Lomé",pp:"PRO",mo:"Espèces",pay:"",d:"Achat chemise dossier"},
-  {id:11,date:"04/06/2026",mois:"Juin",type:"Sortie",m:5100,p:"Yas Lomé",pd:"",c:"Prestataire Lomé",v:"Cotonou",pp:"PRO",mo:"Mobile Money",pay:"",d:"Impression dossier"},
-  {id:12,date:"04/06/2026",mois:"Juin",type:"Entrée",m:400000,p:"Caisse",pd:"",c:"",v:"Lomé",pp:"PERSO",mo:"Chèque",pay:"",d:"Solde Salon de l'immo et de l'énergie"},
-  {id:13,date:"04/06/2026",mois:"Juin",type:"Sortie",m:250000,p:"Ibda Lomé",pd:"",c:"Salaire Brice",v:"Lomé",pp:"PRO",mo:"Chèque",pay:"",d:"Prestation Biashara et Salon Immo"},
-  {id:14,date:"04/06/2026",mois:"Juin",type:"Sortie",m:350,p:"Yas Lomé",pd:"",c:"Internet",v:"Lomé",pp:"PERSO",mo:"Mobile Money",pay:"",d:""},
-  {id:15,date:"04/06/2026",mois:"Juin",type:"Sortie",m:250,p:"Yas Lomé",pd:"",c:"Crédit",v:"Lomé",pp:"PERSO",mo:"Mobile Money",pay:"",d:""},
-  {id:16,date:"04/06/2026",mois:"Juin",type:"Sortie",m:80000,p:"Caisse",pd:"",c:"Prestataire Lomé",v:"Lomé",pp:"PRO",mo:"Espèces",pay:"",d:"Fulbert accompagnement Mai"},
-  {id:17,date:"04/06/2026",mois:"Juin",type:"Sortie",m:49000,p:"Yas Lomé",pd:"",c:"Courses Cotonou",v:"Cotonou",pp:"PERSO",mo:"Mobile Money",pay:"",d:"Boissons anniversaire"},
-  {id:18,date:"04/06/2026",mois:"Juin",type:"Sortie",m:19700,p:"Caisse",pd:"",c:"Essence",v:"Lomé + Cotonou",pp:"PRO",mo:"Espèces",pay:"",d:"Essence"},
-  {id:19,date:"04/06/2026",mois:"Juin",type:"Sortie",m:12000,p:"Caisse",pd:"",c:"Courses Cotonou",v:"Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:"Achat rideau"},
-  {id:20,date:"04/06/2026",mois:"Juin",type:"Sortie",m:20000,p:"Caisse",pd:"",c:"Don",v:"Lomé",pp:"PERSO",mo:"Espèces",pay:"",d:"Soutien Walter décès papa"},
-  {id:21,date:"04/06/2026",mois:"Juin",type:"Sortie",m:11000,p:"Caisse",pd:"",c:"Courses Cotonou",v:"Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:"Achat médoc et serviettes"},
-  {id:22,date:"04/06/2026",mois:"Juin",type:"Sortie",m:7000,p:"Caisse",pd:"",c:"Chauffeur",v:"Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:"Fo Bernard"},
-  {id:23,date:"04/06/2026",mois:"Juin",type:"Transfert",m:180000,p:"Caisse",pd:"Yas Lomé",c:"Transfert",v:"Lomé",pp:"PRO",mo:"Mobile Money",pay:"",d:""},
-  {id:24,date:"04/06/2026",mois:"Juin",type:"Transfert",m:20000,p:"Caisse",pd:"Flooz Lomé",c:"Transfert",v:"Lomé",pp:"PRO",mo:"Mobile Money",pay:"",d:""},
-  {id:25,date:"04/06/2026",mois:"Juin",type:"Sortie",m:6300,p:"Yas Lomé",pd:"",c:"Coiffeuse",v:"Lomé",pp:"PERSO",mo:"Mobile Money",pay:"",d:""},
-  {id:26,date:"04/06/2026",mois:"Juin",type:"Sortie",m:1500,p:"Caisse",pd:"",c:"Péages",v:"Lomé + Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:""},
-  {id:27,date:"05/06/2026",mois:"Juin",type:"Sortie",m:49700,p:"Caisse",pd:"",c:"Courses Cotonou",v:"Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:"Gâteau 15K, restau 27K, repas 7K"},
-  {id:28,date:"05/06/2026",mois:"Juin",type:"Entrée",m:10000,p:"Momo Bénin",pd:"",c:"",v:"Cotonou",pp:"PERSO",mo:"Mobile Money",pay:"",d:"Cadeau"},
-  {id:29,date:"05/06/2026",mois:"Juin",type:"Entrée",m:5000,p:"Yas Lomé",pd:"",c:"",v:"Cotonou",pp:"PERSO",mo:"Mobile Money",pay:"",d:"Cadeau"},
-  {id:30,date:"05/06/2026",mois:"Juin",type:"Entrée",m:100000,p:"Caisse",pd:"",c:"",v:"Cotonou",pp:"PERSO",mo:"Espèces",pay:"",d:"P'tit vieux"},
-  {id:31,date:"06/06/2026",mois:"Juin",type:"Sortie",m:125000,p:"Yas Lomé",pd:"",c:"Prestataire Lomé",v:"Lomé",pp:"PRO",mo:"Mobile Money",pay:"",d:"Paiement Mario Salon immo"},
-];
 
 const fmt=n=>Math.round(n).toLocaleString('fr-FR')+' FCFA';
 const toast=(msg,err=false)=>{const t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(err?' err':'');setTimeout(()=>t.className='toast',2500)};
-const setSyncStatus=(s,msg)=>{const d=document.getElementById('sdot'),l=document.getElementById('slbl');d.className='sync-dot '+s;l.textContent=msg};
+const setSS=(s,msg)=>{document.getElementById('sdot').className='sdot '+s;document.getElementById('slbl').textContent=msg};
 
 let cats=JSON.parse(localStorage.getItem('b26_c')||JSON.stringify(DC));
 let poches=JSON.parse(localStorage.getItem('b26_p')||JSON.stringify(DP));
 let init=JSON.parse(localStorage.getItem('b26_i')||JSON.stringify(DI));
-let ops=JSON.parse(localStorage.getItem('b26_o')||'null');
-if(ops===null){ops=[...DO];localStorage.setItem('b26_o',JSON.stringify(ops));}
+
+// ops = tableau PLAT de toutes les opérations, toutes sources confondues
+// Chaque op a un champ "src" : "local" ou "sheets"
+// On déduplique par date+montant+poche+type pour éviter les doublons
+let ops=JSON.parse(localStorage.getItem('b26_o2')||'[]');
+
 let ct='Entrée',cmR='Juin',cmH='Juin';
 
-const sv=()=>{localStorage.setItem('b26_c',JSON.stringify(cats));localStorage.setItem('b26_p',JSON.stringify(poches));localStorage.setItem('b26_o',JSON.stringify(ops))};
+const sv=()=>{
+  localStorage.setItem('b26_c',JSON.stringify(cats));
+  localStorage.setItem('b26_p',JSON.stringify(poches));
+  localStorage.setItem('b26_o2',JSON.stringify(ops));
+};
+
+// ── CALCUL SOLDE RÉEL ─────────────────────────────────────
+// Solde réel = solde initial + toutes entrées - toutes sorties ± transferts
+function getSolde(poche){
+  let s = init[poche] || 0;
+  ops.forEach(o=>{
+    if(o.type==='Entrée'  && o.p===poche) s += o.m;
+    if(o.type==='Sortie'  && o.p===poche) s -= o.m;
+    if(o.type==='Transfert' && o.p===poche)  s -= o.m;
+    if(o.type==='Transfert' && o.pd===poche) s += o.m;
+  });
+  return s;
+}
+
+// ── DÉDUPLICATION ─────────────────────────────────────────
+function dedupKey(o){
+  return `${o.date}|${o.type}|${o.m}|${o.p}|${o.pd||''}|${o.c}`;
+}
+
+function mergeOps(newOps){
+  const existing = new Map(ops.map(o=>[dedupKey(o), o]));
+  newOps.forEach(o=>{
+    const k = dedupKey(o);
+    if(!existing.has(k)) existing.set(k, o);
+  });
+  ops = Array.from(existing.values());
+  ops.sort((a,b)=> b.id - a.id);
+  sv();
+}
 
 // ── SYNC GOOGLE SHEETS ────────────────────────────────────
-async function pushToSheets(op) {
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        secret: SECRET,
-        mois: op.mois,
-        date: op.date,
-        ville: op.v,
-        type: op.type,
-        pp: op.pp,
-        categorie: op.c,
-        poche: op.p,
-        pocheDest: op.pd||'',
-        moyen: op.mo,
-        montant: op.m,
-        payeur: op.pay||'',
-        description: op.d||''
-      })
-    });
-    const data = await res.json();
-    return data.success === true;
-  } catch(e) { return false; }
+async function pushToSheets(op){
+  try{
+    const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({
+      secret:SECRET, mois:op.mois, date:op.date, ville:op.v,
+      type:op.type, pp:op.pp, categorie:op.c, poche:op.p,
+      pocheDest:op.pd||'', moyen:op.mo, montant:op.m,
+      payeur:op.pay||'', description:op.d||''
+    })});
+    const data=await res.json();
+    return data.success===true;
+  }catch(e){return false;}
 }
 
-async function syncMois(mois) {
-  setSyncStatus('loading', 'Synchronisation...');
-  try {
-    const res = await fetch(`${SCRIPT_URL}?secret=${SECRET}&mois=${encodeURIComponent(mois)}`);
-    const data = await res.json();
-    if(data.error){ setSyncStatus('err','Erreur sync');toast('Erreur : '+data.error,true);return; }
-    const sheetsOps = data.ops.map((o,i)=>({
-      id: 'sh_'+mois+'_'+i,
-      date: o.date, mois,
-      type: o.type, m: Number(o.montant)||0,
-      p: o.poche, pd: o.pocheDest||'',
-      c: o.categorie, v: o.ville||'Lomé',
-      pp: o.pp||'PERSO', mo: o.moyen||'Espèces',
-      pay: o.payeur||'', d: o.description||''
-    })).filter(o=>o.m>0);
-    ops = ops.filter(o=>o.mois !== mois);
-    ops = [...sheetsOps, ...ops];
-    sv();
-    setSyncStatus('ok','Synchronisé');
-    toast('Sync '+mois+' OK !');
-    if(cmR===mois) rRecap();
-    if(cmH===mois) rHist();
-    rSoldes();
-  } catch(e) { setSyncStatus('err','Hors ligne');toast('Erreur réseau',true); }
+async function syncMois(mois){
+  try{
+    const res=await fetch(`${SCRIPT_URL}?secret=${SECRET}&mois=${encodeURIComponent(mois)}`);
+    const data=await res.json();
+    if(data.error||!data.ops) return false;
+    const sheetsOps=data.ops.map((o,i)=>({
+      id: parseInt(o.date.split('/').reverse().join('')+''+i) || Date.now()+i,
+      date:o.date, mois,
+      type:o.type||'Sortie',
+      m:Number(o.montant)||0,
+      p:o.poche||'', pd:o.pocheDest||'',
+      c:o.categorie||'', v:o.ville||'Lomé',
+      pp:o.pp||'PERSO', mo:o.moyen||'Espèces',
+      pay:o.payeur||'', d:o.description||'',
+      src:'sheets'
+    })).filter(o=>o.m>0 && o.type && o.p);
+    mergeOps(sheetsOps);
+    return true;
+  }catch(e){return false;}
 }
 
-async function syncAll() {
-  setSyncStatus('loading','Synchronisation...');
-  for(const m of MOIS) { await syncMois(m); }
-  setSyncStatus('ok','Tout synchronisé');
-  toast('Synchronisation complète !');
+async function syncAll(){
+  setSS('spin','Synchronisation...');
+  let ok=true;
+  for(const m of MOIS){
+    const res=await syncMois(m);
+    if(!res) ok=false;
+  }
+  setSS(ok?'ok':'err', ok?'Synchronisé':'Partiel — vérif réseau');
+  toast(ok?'Sync complète !':'Sync partielle',!ok);
+  rSoldes();
+  rRecap();
+  rHist();
 }
 
 // ── FORMULAIRE ────────────────────────────────────────────
@@ -314,7 +314,10 @@ async function saveOp(){
   const now=new Date();
   const mi=now.getMonth()-5;
   const mn=mi>=0&&mi<7?MOIS[mi]:MOIS[0];
-  const op={id:Date.now(),date:now.toLocaleDateString('fr-FR'),mois:mn,type:ct,m,
+  const op={
+    id:Date.now(),
+    date:now.toLocaleDateString('fr-FR'),
+    mois:mn, type:ct, m,
     p:document.getElementById('fp').value,
     pd:ct==='Transfert'?document.getElementById('fd').value:'',
     c:ct==='Transfert'?'Transfert':document.getElementById('fc').value,
@@ -323,36 +326,33 @@ async function saveOp(){
     mo:document.getElementById('fmo').value,
     pay:document.getElementById('fpay').value,
     d:document.getElementById('fdesc').value,
+    src:'local'
   };
-  ops.unshift(op);
-  sv();
+  mergeOps([op]);
   document.getElementById('fm').value='';
   document.getElementById('fdesc').value='';
   document.getElementById('fpay').value='';
   toast('Enregistré !');
-  setSyncStatus('loading','Envoi vers Sheets...');
-  const ok = await pushToSheets(op);
-  setSyncStatus(ok?'ok':'err', ok?'Synchronisé':'Hors ligne - sauvegardé en local');
+  setSS('spin','Envoi vers Sheets...');
+  const ok=await pushToSheets(op);
+  setSS(ok?'ok':'err',ok?'Synchronisé':'Sauvegardé local');
+  rSoldes();
   go('soldes',document.getElementById('n-soldes'));
 }
 
-// ── SOLDES ────────────────────────────────────────────────
-function getSolde(p){
-  let e=init[p]||0;
-  ops.forEach(o=>{
-    if(o.type==='Entrée'&&o.p===p)e+=o.m;
-    if(o.type==='Sortie'&&o.p===p)e-=o.m;
-    if(o.type==='Transfert'&&o.p===p)e-=o.m;
-    if(o.type==='Transfert'&&o.pd===p)e+=o.m;
-  });
-  return e;
-}
-
+// ── AFFICHAGE SOLDES ─────────────────────────────────────
 function rSoldes(){
   let tot=0;
   document.getElementById('sg').innerHTML=poches.map(p=>{
-    const s=getSolde(p);tot+=s;
-    return `<div class="sc"><div class="sl">${p}</div><div class="sa ${s<0?'neg':s>0?'pos':''}">${fmt(s)}</div></div>`;
+    const s=getSolde(p); tot+=s;
+    const ini=init[p]||0;
+    const diff=s-ini;
+    const diffTxt=diff===0?'':(diff>0?`+${fmt(diff)}`:`${fmt(diff)}`);
+    return `<div class="sc">
+      <div class="sl">${p}</div>
+      <div class="sa ${s<0?'neg':s>0?'pos':''}">${fmt(s)}</div>
+      ${diffTxt?`<div class="si" style="color:${diff>0?'#4ADE80':'#F87171'}">${diffTxt} depuis début</div>`:''}
+    </div>`;
   }).join('');
   const tEl=document.getElementById('tot');
   tEl.textContent=fmt(tot);
@@ -417,7 +417,7 @@ function rmP(i){poches.splice(i,1);sv();rSel();rParams();}
 function saveI(){
   document.querySelectorAll('#pi input').forEach(el=>{init[el.getAttribute('data-p')]=parseFloat(el.value)||0;});
   localStorage.setItem('b26_i',JSON.stringify(init));
-  rSoldes();toast('Soldes sauvegardés !');
+  rSoldes();toast('Soldes initiaux sauvegardés !');
 }
 
 function exportCSV(){
@@ -443,6 +443,9 @@ const mnths=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov'
 const now=new Date();
 document.getElementById('hd').textContent=`${days[now.getDay()]} ${now.getDate()} ${mnths[now.getMonth()]} ${now.getFullYear()}`;
 rSel();st('Entrée');rSoldes();
+
+// Sync automatique au démarrage
+window.addEventListener('load',()=>syncAll());
 </script>
 </body>
 </html>
