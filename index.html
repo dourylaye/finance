@@ -204,6 +204,8 @@ let init=JSON.parse(localStorage.getItem('b26_i')||JSON.stringify(DI));
 // ops = tableau PLAT de toutes les opérations, toutes sources confondues
 // Chaque op a un champ "src" : "local" ou "sheets"
 // On déduplique par date+montant+poche+type pour éviter les doublons
+// Nettoyer ancienne clé
+localStorage.removeItem('b26_o');
 let ops=JSON.parse(localStorage.getItem('b26_o2')||'[]');
 
 let ct='Entrée',cmR='Juin',cmH='Juin';
